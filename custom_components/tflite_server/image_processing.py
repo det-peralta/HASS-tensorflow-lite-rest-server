@@ -137,6 +137,8 @@ class ObjectDetectEntity(ImageProcessingEntity):
         predictions = response.json()
         self._targets = get_target(predictions["objects"], self._target)
         self._state = len(self._targets)
+        if hasattr(self, "_save_file_folder") and self._state > 0:
+            self.save_image(image, self._targets, self._target, self._save_file_folder)
 
     @property
     def camera_entity(self):
@@ -170,3 +172,26 @@ class ObjectDetectEntity(ImageProcessingEntity):
         if self._last_detection:
             attr["last_{}_detection".format(self._target)] = self._last_detection
         return attr
+
+    def save_image(self, image, predictions, target, directory):
+        """Save a timestamped image with bounding boxes around targets."""
+        img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+        draw = ImageDraw.Draw(img)
+
+        for prediction in predictions:
+            prediction_confidence = ds.format_confidence(prediction["score"])
+            if (
+                prediction["name"] in target
+                and prediction_confidence >= self._confidence
+            ):
+                draw_box(
+                    draw,
+                    prediction['box'],
+                    self._image_width,
+                    self._image_height,
+                    text=str(prediction_confidence),
+                    color=RED,
+                )
+
+        latest_save_path = directory + "{}_latest_{}.jpg".format(self._name, target[0])
+        img.save(latest_save_path)
