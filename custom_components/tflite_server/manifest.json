@@ -4,7 +4,8 @@
         "documentation": "https://github.com/robmarkcole/HASS-tensorflow-lite-rest-server",
         "requirements": [
                 "pillow",
-                "requests"
+                "requests",
+                "deepstack-python==0.4"
         ],
         "dependencies": [],
         "codeowners": [
